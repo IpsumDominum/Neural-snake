@@ -1,0 +1,123 @@
+var population = {};
+for(i=0;i<10;i++){
+  population[i] = Neuronetwork();
+  population[i].Layers.push(FullyConnectedLayer(24,10,"sigmoid"));
+  population[i].Layers.push(FullyConnectedLayer(10,4,"sigmoid")); 
+}
+
+
+var count = 0;
+var canvas = document.getElementById('game');
+var context = canvas.getContext('2d');
+function argMax(array) {
+  return [].map.call(array, (x, i) => [x, i]).reduce((r, a) => (a[0] > r[0] ? a : r))[1];
+}
+var action_table = {0:"top",
+                    1:"left",
+                    2:"right",
+                    3:"bottom"}
+var sensory_input = new Array(24).fill(0);
+//sensory_input : 8 directions, 3 channels [distance to wall, distance to food,distance to tail]
+
+var roll_out_idx = 0;
+//var NN = population[roll_out_idx];
+console.log(population);
+function loop() {  
+  if(roll_out_idx<population.length){
+    requestAnimationFrame(loop);
+  }
+  if (++count < 4) {
+    return;
+  }
+  //var map= new Array(25).fill(new Array(25).fill(0));
+  context.clearRect(0,0,canvas.width,canvas.height);
+  context.fillStyle = 'red';
+  context.fillRect(apple.x*grid, apple.y*grid, grid-1, grid-1);
+  snake.x += snake.dx;
+  snake.y += snake.dy;
+  if (snake.x < 0 ||snake.x >= 25||snake.y < 0||snake.y >= 25) {
+        reset_snake();
+        fitness= snake.maxCells;
+       // NN = population[++roll_out_idx];
+      }
+    snake.cells.unshift({x: snake.x, y: snake.y});
+  if (snake.cells.length > snake.maxCells) {
+    snake.cells.pop();
+  }
+  //map[apple.x][apple.y] = 1;
+  snake.cells.forEach(function(cell, index) {
+  //  map[cell.x][cell.y] = 2;
+    context.fillStyle = 'green';
+    context.fillRect(cell.x*grid, cell.y*grid, grid-1, grid-1);  
+    if (cell.x === apple.x && cell.y === apple.y) {
+      snake.maxCells++;
+      apple.x = getRandomInt(0, 25) ;
+      apple.y = getRandomInt(0, 25) ;
+    }
+    for (var i = index + 1; i < snake.cells.length; i++) {
+      if (cell.x === snake.cells[i].x && cell.y === snake.cells[i].y) {
+        reset_snake();
+      }
+    }
+  });
+
+  ////////////////////////////////
+  ///////////////////////////////
+  ////Look in to all directions, for wall, food, and itself
+  direction_idx = 0;
+  for(var d in directions){
+        var direction = directions[d];
+        var dist = 0;
+        var lookaheadx = snake.x+direction[0]*dist;
+        var lookaheady = snake.y +direction[1]*dist;        
+        while(true){            
+          dist += 1;
+          lookaheadx += direction[0];
+          lookaheady += direction[1]; 
+
+          if(lookaheadx==apple.x &&lookaheady==apple.y){
+              sensory_input[1+direction_idx*3] = dist;
+          }
+          if(lookaheadx >= 25 || 
+            lookaheadx <= 0 ||
+            lookaheady >=25||
+            lookaheady <=0){
+              //that means we have hit a wall with our senses
+              sensory_input[direction_idx*3] = dist;
+              break;
+          }                      
+        }
+      direction_idx+=1;
+   }
+
+      //get distance to itself, from the direction it is heading to.
+      var lookaheadx = snake.x+snake_direction[0]*i;
+      var lookaheady = snake.y +snake_direction[1]*i;
+      var dist = 0;
+      while(true){
+       dist +=1;
+       lookaheadx += snake_direction[0];
+        lookaheady += snake_direction[1];
+          for(i=snake.cells.length-1;i>0;i++){
+          var cell = snake.cells[i];
+            if(lookaheadx ==cell.x&& lookaheady==cell.y){
+             sensory_input[2*snake_directionidx] = dist;
+              break;
+            }
+            break;
+          }
+          if(lookaheadx >= 25 || 
+            lookaheadx <= 0 ||
+            lookaheady >=25||
+            lookaheady <=0){
+              break;
+          }            
+        }
+/* var result = argMax(NN.propagate(sensory_input));
+var action = action_table[result];
+snake_direction = directions[action];
+snake_directionidx = result;
+snake.dx = snake_direction[0];
+  snake.dy = snake_direction[1]; */
+ 
+}
